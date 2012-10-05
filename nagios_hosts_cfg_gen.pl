@@ -2,61 +2,78 @@
 
 use strict;
 use Term::ReadKey;
+use Net::Amazon::EC2;
+use Data::Dumper;
 
+#
+#
+# begin globals vars section
+my ($ip_address, $hostname, $alias, $tier);
 my $debug;
 if (@ARGV == 1) {
       $debug = 1;
 }
-$| = 0;
-#
-# sort of global vars
+
 my $nagioscfgpath = "/etc/nagios/configs";
 my $nagiosbasename = "-hosts.cfg";
-my $tier;
-
+# end global vars section
+#
+# set STDOUT buffer to flush immediately
+$| = 0;
+# Read in some stuff from the command line
+# hopefully it is correct but if not we will fail the run.
 print "Enter a stack name: ";
 my $stack = ReadLine(0);
 chomp $stack;
 my $lstack = lc($stack);
 
-print "Enter the name of the server list text file: ";
-my $inputfile = ReadLine(0);
-chomp $inputfile;
-
-open ('FH', "<$inputfile") or die "Can't open $inputfile for reading:$!";
-
 my $outputfile = $nagioscfgpath . "/" . $stack . "/" . $lstack . $nagiosbasename;
 if ($debug) {
    $outputfile = "test.cfg";
 }
+
+
+# Connect to EC2 with my credentials and get me the stuff I need.
+#
+my $ec2 = Net::Amazon::EC2->new(
+	AWSAccessKeyId => 'YourAWSPublicKey',
+	SecretAccessKey => 'YourAWSPrivateKey',
+);
+
+my $running_instances = $ec2->describe_instances;
+# Now that we have the EC2 object open the output file handle
 open OFH, ">>$outputfile" or die "Can't open $outputfile: $!";
 
-while (<FH>) {
-     chomp;
-     my $line = $_;
-     if ($line =~ /^\[(.*?)\]/) {
-          $tier = $1;
-          print OFH "#$stack $tier\n";
-          next;
-     }
-     my ($friendlyname, $fqdn) = split /\t+/, $line;
-     my $ip;
-     # pull the ip address out of the hostname for Amazon EC2
-     ($ip = $fqdn) =~ s/^ec2-(\d+)-(\d+)-(\d+)-(\d+).*?$/$1.$2.$3.$4/;
-     printConfigData($friendlyname, $fqdn, $ip);
+foreach my $reservation (@$running_instances) {
+	foreach my $instance ($reservation->instances_set) {
+		#$fqdn = $instance->dns_name;
+		$ip_address = $instance->ip_address;
+		for (my $i = 0; $i < scalar(@{$instance->tag_set}); $i++) {
+			if ($instance->tag_set->[$i]->key =~ /Name/) {
+				$hostname = $instance->tag_set->[$i]->value;
+			}
+		}
+		for (my $i = 0; $i < scalar(@{$instance->tag_set}); $i++) {
+			if ($instance->tag_set->[$i]->key =~ /Tier/) {
+				$tier = $instance->tag_set->[$i]->value;
+			}
+		}
+	}
+  printConfigData($hostname, $ip_address, $tier, $stack);
 }
 close ('OFH');
-close ('FH');
 
 sub printConfigData {
 
       my $hostname = shift;
-      my $fqdn = shift;
       my $ip = shift;
+      my $tier = shift;
+      my $stack = shift;
       my $alias;
 
       ($alias = $hostname) =~ s/-/\ /g; 
 
+      print OFH "# Defining host entry for $hostname of $stack in $tier\n";
       print OFH "define host{" . "\n";
       print OFH "\thost_name\t$hostname\n";
       print OFH "\tuse\t\t" . $stack . "-Generic-Host\n";
