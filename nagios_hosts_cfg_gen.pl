@@ -1,27 +1,34 @@
 #!/usr/bin/perl
 
 use strict;
+use Term::ReadKey;
 
+my $debug;
+if (@ARGV == 1) {
+      $debug = 1;
+}
 $| = 0;
+#
+# sort of global vars
 my $nagioscfgpath = "/etc/nagios/configs";
 my $nagiosbasename = "-hosts.cfg";
-
-print "Enter a stack name: ";
-my $stack = <>;
-chomp $stack;
-my $lstack = lc($stack);
-print $lstack, "\n";
-
-print "Enter the name of the server list text file: ";
-my $inputfile = <>;
-chomp $inputfile;
-open ('FH', "<$inputfile") or die "Can't open $inputfile for reading:$!";
 my $tier;
 
+print "Enter a stack name: ";
+my $stack = ReadLine(0);
+chomp $stack;
+my $lstack = lc($stack);
+
+print "Enter the name of the server list text file: ";
+my $inputfile = ReadLine(0);
+chomp $inputfile;
+
+open ('FH', "<$inputfile") or die "Can't open $inputfile for reading:$!";
+
 my $outputfile = $nagioscfgpath . "/" . $stack . "/" . $lstack . $nagiosbasename;
-
-$outputfile = "test.cfg";
-
+if ($debug) {
+   $outputfile = "test.cfg";
+}
 open OFH, ">>$outputfile" or die "Can't open $outputfile: $!";
 
 while (<FH>) {
@@ -34,8 +41,8 @@ while (<FH>) {
      }
      my ($friendlyname, $fqdn) = split /\t+/, $line;
      my $ip;
+     # pull the ip address out of the hostname for Amazon EC2
      ($ip = $fqdn) =~ s/^ec2-(\d+)-(\d+)-(\d+)-(\d+).*?$/$1.$2.$3.$4/;
-     print "$ip == $fqdn\n";
      printConfigData($friendlyname, $fqdn, $ip);
 }
 close ('OFH');
@@ -46,10 +53,9 @@ sub printConfigData {
       my $hostname = shift;
       my $fqdn = shift;
       my $ip = shift;
-
       my $alias;
+
       ($alias = $hostname) =~ s/-/\ /g; 
-      print $alias, "\n";
 
       print OFH "define host{" . "\n";
       print OFH "\thost_name\t$hostname\n";
