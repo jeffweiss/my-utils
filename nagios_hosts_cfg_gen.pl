@@ -29,8 +29,17 @@ $| = 0;
 print "Enter a stack name: ";
 my $stack = ReadLine(0);
 chomp $stack;
+
+# create upper and lower case versions from readline for HPSSA
+# or just lower for all others
+# just a hack at this point but it works
 my $lstack = lc($stack);
-my $ustack = uc($lstack);
+my $ustack;
+if ($lstack =~ /hpssa/) {
+  $ustack = uc($lstack);
+} else {
+  $ustack = $stack;
+}
 
 print "Enter and environment (i.e. devel|prod): ";
 my $environment = ReadLine(0);
