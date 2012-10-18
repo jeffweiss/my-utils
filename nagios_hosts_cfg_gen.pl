@@ -5,18 +5,15 @@ use Term::ReadKey;
 use Net::Amazon::EC2;
 use YAML::Tiny;
 use Data::Dumper;
-
 #
 #
 # begin globals vars section
 my ($ip_address, $hostname, $alias, $tier);
 my $local;
 my @allhosts = ();
-
 if (@ARGV == 1) {
       $local = 1;
 }
-
 my $nagioscfgpath = "/etc/nagios/configs";
 my $hostsbasename = "-hosts.cfg";
 my $hostgroupbasename = "-hostgroups.cfg";
@@ -93,16 +90,15 @@ foreach my $reservation (@$running_instances) {
 	foreach my $instance ($reservation->instances_set) {
 		#$fqdn = $instance->dns_name;
 		$ip_address = $instance->ip_address;
-		for (my $i = 0; $i < scalar(@{$instance->tag_set}); $i++) {
-			if ($instance->tag_set->[$i]->key =~ /Name/) {
-				$hostname = $instance->tag_set->[$i]->value;
-			}
-		}
-		for (my $i = 0; $i < scalar(@{$instance->tag_set}); $i++) {
-			if ($instance->tag_set->[$i]->key =~ /Tier/) {
-				$tier = $instance->tag_set->[$i]->value;
-			}
-		}
+		foreach my $tag (@{$instance->tag_set}) {
+			 if ($tag->key =~ /Name/) {
+				  $hostname = $tag->value;
+			 }
+       elsif ($tag->key =~ /Tier/) {
+          $tier = $tag->value;
+       }
+     }
+   }
 	}
   printhostsConfigData($hostname, $ip_address, $tier, $ustack);
   push @allhosts, $hostname; 
