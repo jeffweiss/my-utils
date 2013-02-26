@@ -15,7 +15,7 @@ require './config.rb'
  # 	end
 
 # end
-thing = YAML.load('/home/surma/.fog_old')
+thing = YAML.load_file('/home/surma/.fog.old')
 puts thing.inspect
 
 # The key data is pulled from the config.rb file in the local directory.  
@@ -37,7 +37,7 @@ connection.servers.each do |server|
 	                              }
 end
 
-puts my_instance_ids
+puts my_instance_data
 
 connection.servers.all.table([:id, :state, :dns_name, :public_ip_address, :private_ip_address, :tags])
 # my_servers
