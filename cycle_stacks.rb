@@ -15,7 +15,7 @@ require './config.rb'
  # 	end
 
 # end
-thing = YAML.load_file('/home/surma/.fog.old')
+thing = YAML.load_file('/home/surma/.fog-old')
 puts thing.inspect
 
 # The key data is pulled from the config.rb file in the local directory.  
