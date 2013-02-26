@@ -5,7 +5,6 @@ require 'net/ssh'
 require 'fog'
 
 require './config.rb'
-
 # Net::SSH.start('puppet.hp8.us', 'surma') do |ssh|
 # 	output = ssh.exec!("hostname")
 # 	puts output
@@ -37,5 +36,5 @@ end
 
 puts my_instance_ids
 
-connection.servers.all.table([:id, :state, :dns_name, :public_ip_address, :private_ip_address])
+connection.servers.all.table([:id, :state, :dns_name, :public_ip_address, :private_ip_address, :tags])
 # my_servers
