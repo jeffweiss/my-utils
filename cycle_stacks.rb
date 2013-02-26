@@ -15,8 +15,8 @@ require './config.rb'
  # 	end
 
 # end
-thing = YAML.load_file('/etc/puppetlabs/puppet/data/users.yaml')
-puts thing.inspect
+credentials = YAML.load_file('./aws_ec2keys.yml')
+puts credentials.inspect
 
 # The key data is pulled from the config.rb file in the local directory.  
 # That is then passed to Fog to create a new connection to AWS.  
