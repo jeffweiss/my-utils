@@ -6,15 +6,15 @@ require 'fog'
 require 'yaml'
 
 require './config.rb'
- # Net::SSH.start('puppet.hp8.us', 'surma') do |ssh|
- # 	output = ssh.exec!("hostname")
- # 	puts output
- # 	stdout = ""
- # 	ssh.exec!("ls -la /home/surma") do |channel, stream, data|
- # 		stdout << data if stream == :stdout
- # 	end
+Net::SSH.start('puppet.hp8.us', 'surma') do |ssh|
+	output = ssh.exec!("hostname")
+	puts output
+	stdout = ""
+	ssh.exec!("ls -la /home/surma") do |channel, stream, data|
+		stdout << data if stream == :stdout
+	end
 
-# end
+end
 credentials = YAML.load_file('./aws_ec2keys.yml')
 puts credentials.inspect
 
